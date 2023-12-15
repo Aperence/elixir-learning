@@ -1,6 +1,8 @@
 defmodule ServerWeb.Router do
   use ServerWeb, :router
 
+  import ServerWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule ServerWeb.Router do
     plug :put_root_layout, html: {ServerWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
     plug :introspect
   end
 
@@ -15,18 +18,72 @@ defmodule ServerWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :auth do
+    plug :api
+    plug ServerWeb.UserController
+  end
+
+  pipeline :auth_channel do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {ServerWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :introspect
+    plug :fetch_user_info
+    plug :ensure_authenticaticated
+    plug :put_user_token
+  end
+
+  defp fetch_user_info(conn, _) do
+    ServerWeb.UserAuth.fetch_current_user(conn, [])
+  end
+
+  defp ensure_authenticaticated(conn, _) do
+    IO.puts("Checking if authenticated")
+    IO.inspect(conn.assigns[:current_user])
+    ServerWeb.UserAuth.require_authenticated_user(conn, [])
+  end
+
+  defp put_user_token(conn, _) do
+    if current_user = conn.assigns[:current_user] do
+      token = Phoenix.Token.sign(conn, "user socket", current_user.id)
+      assign(conn, :user_token, token)
+    else
+      conn
+    end
+  end
+
   scope "/", ServerWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/redirect", PageController, :redirect_home
     get "/hello", HelloController, :hello
     get "/hello/:messenger", HelloController, :show
+    post "/login", LoginController, :login
+  end
+
+  scope "/", ServerWeb do
+    pipe_through :auth_channel
+
+    resources "/products", ProductController
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", ServerWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", ServerWeb do
+    pipe_through :api
+
+    resources "/users", UserController
+    resources "/urls", UrlController, except: [:new, :edit]
+  end
+
+  scope "/api", ServerWeb do
+    pipe_through :auth
+
+    resources "/api/create", TestProductController
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:server, :dev_routes) do
@@ -49,9 +106,46 @@ defmodule ServerWeb.Router do
     IO.puts """
     Verb: #{inspect(conn.method)}
     Host: #{inspect(conn.host)}
-    Headers: #{inspect(conn.req_headers)}
     """
 
     conn
+  end
+
+  ## Authentication routes
+
+  scope "/", ServerWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    live_session :redirect_if_user_is_authenticated,
+      on_mount: [{ServerWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/users/register", UserRegistrationLive, :new
+      live "/users/log_in", UserLoginLive, :new
+      live "/users/reset_password", UserForgotPasswordLive, :new
+      live "/users/reset_password/:token", UserResetPasswordLive, :edit
+    end
+
+    post "/users/log_in", UserSessionController, :create
+  end
+
+  scope "/", ServerWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [{ServerWeb.UserAuth, :ensure_authenticated}] do
+      live "/users/settings", UserSettingsLive, :edit
+      live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+    end
+  end
+
+  scope "/", ServerWeb do
+    pipe_through [:browser]
+
+    delete "/users/log_out", UserSessionController, :delete
+
+    live_session :current_user,
+      on_mount: [{ServerWeb.UserAuth, :mount_current_user}] do
+      live "/users/confirm/:token", UserConfirmationLive, :edit
+      live "/users/confirm", UserConfirmationInstructionsLive, :new
+    end
   end
 end
