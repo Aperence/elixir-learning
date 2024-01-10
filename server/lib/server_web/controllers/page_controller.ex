@@ -5,8 +5,8 @@ defmodule ServerWeb.PageController do
     # The home page is often custom made,
     # so skip the default app layout.
     conn
-    |> put_status(200)
-    |> put_flash(:error, "Pretended error")
+    # |> put_status(200)
+    # |> put_flash(:error, "Pretended error")
     |> render(:home, layout: false)
   end
 

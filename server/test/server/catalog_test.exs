@@ -12,7 +12,11 @@ defmodule Server.CatalogTest do
 
     test "list_products/0 returns all products" do
       product = product_fixture()
-      assert Catalog.list_products() == [product]
+      list =
+        Catalog.list_products()
+        |> Enum.map(fn product ->  Map.put(product, :categories, []) end)
+        |> Enum.to_list()
+      assert list == [product]
     end
 
     test "get_product!/1 returns the product with given id" do

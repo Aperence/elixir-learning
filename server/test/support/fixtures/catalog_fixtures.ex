@@ -12,9 +12,10 @@ defmodule Server.CatalogFixtures do
       attrs
       |> Enum.into(%{
         description: "some description",
-        price: "120.5",
+        price: "120.500000",
         title: "some title",
-        views: 42
+        views: 42,
+        categories: []
       })
       |> Server.Catalog.create_product()
 

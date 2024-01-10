@@ -78,8 +78,17 @@ defmodule ServerWeb.Telemetry do
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),
       summary("vm.total_run_queue_lengths.cpu"),
-      summary("vm.total_run_queue_lengths.io")
+      summary("vm.total_run_queue_lengths.io"),
+      summary("phoenix.router_dispatch.stop.duration",
+        tags: [:method, :route],
+        tag_values: &get_and_put_http_method/1,
+        unit: {:native, :millisecond}
+      )
     ]
+  end
+
+  defp get_and_put_http_method(%{conn: %{method: method}} = metadata) do
+    Map.put(metadata, :method, method)
   end
 
   defp periodic_measurements do

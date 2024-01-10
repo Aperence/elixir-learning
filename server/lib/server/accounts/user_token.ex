@@ -10,6 +10,7 @@ defmodule Server.Accounts.UserToken do
   # since someone with access to the email may take over the account.
   @reset_password_validity_in_days 1
   @confirm_validity_in_days 7
+  @validity_token 1
   @change_email_validity_in_days 7
   @session_validity_in_days 60
 
@@ -127,6 +128,7 @@ defmodule Server.Accounts.UserToken do
   end
 
   defp days_for_context("confirm"), do: @confirm_validity_in_days
+  defp days_for_context("api-token"), do: @validity_token
   defp days_for_context("reset_password"), do: @reset_password_validity_in_days
 
   @doc """

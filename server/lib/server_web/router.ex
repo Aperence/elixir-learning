@@ -20,7 +20,7 @@ defmodule ServerWeb.Router do
 
   pipeline :auth do
     plug :api
-    plug ServerWeb.UserController
+    plug :fetch_api_user
   end
 
   pipeline :auth_channel do
@@ -31,13 +31,9 @@ defmodule ServerWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :introspect
-    plug :fetch_user_info
+    plug :fetch_current_user
     plug :ensure_authenticaticated
     plug :put_user_token
-  end
-
-  defp fetch_user_info(conn, _) do
-    ServerWeb.UserAuth.fetch_current_user(conn, [])
   end
 
   defp ensure_authenticaticated(conn, _) do
@@ -75,8 +71,13 @@ defmodule ServerWeb.Router do
   scope "/api", ServerWeb do
     pipe_through :api
 
-    resources "/users", UserController
     resources "/urls", UrlController, except: [:new, :edit]
+  end
+
+  scope "/api", ServerWeb do
+    pipe_through :auth
+
+    resources "/users", UserController
   end
 
   scope "/api", ServerWeb do

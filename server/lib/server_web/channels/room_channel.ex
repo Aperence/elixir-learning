@@ -1,5 +1,6 @@
 defmodule ServerWeb.RoomChannel do
   use ServerWeb, :channel
+  alias ServerWeb.Presence
 
   @impl true
   def join("room:lobby", payload, socket) do
@@ -10,8 +11,24 @@ defmodule ServerWeb.RoomChannel do
     end
   end
 
+  def join("room:presence", %{"name" => name}, socket) do
+    send(self(), :after_join)
+    {:ok, assign(socket, :name, name)}
+  end
+
   def join("room:" <> _private_room_id, _params, _socket) do
     {:error, %{reason: "unauthorized"}}
+  end
+
+  @impl true
+  def handle_info(:after_join, socket) do
+    {:ok, _} =
+      Presence.track(socket, socket.assigns.name, %{
+        online_at: inspect(System.system_time(:second))
+      })
+
+    push(socket, "presence_state", Presence.list(socket))
+    {:noreply, socket}
   end
 
   # Channels can be used in a request/response fashion

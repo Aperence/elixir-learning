@@ -41,7 +41,8 @@ defmodule ServerWeb.UserSocket do
       {:ok, user_id} ->
         {:ok, assign(socket, :current_user, user_id)}
       {:error, reason} ->
-        :error
+        # :error
+        {:ok, socket}
     end
   end
 
