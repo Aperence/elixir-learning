@@ -1,0 +1,15 @@
+services:
+  pc1:
+    image: elixir
+    environment:
+      - ERLANG_COOKIE="its_a_secret"
+    volumes:
+      - ./app.exs:/app.exs
+    command: [bash, -c, "iex --no-halt --sname host@pc1 --cookie $$ERLANG_COOKIE app.exs"]
+  pc2:
+    image: elixir
+    environment:
+      - ERLANG_COOKIE="its_a_secret"
+    volumes:
+      - ./app.exs:/app.exs
+    command: [bash, -c, "iex --no-halt --sname host@pc2 --cookie $$ERLANG_COOKIE app.exs"]
