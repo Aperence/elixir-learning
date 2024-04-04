@@ -7,9 +7,28 @@ defmodule Server.Application do
 
   @impl true
   def start(_type, _args) do
+    # strategy for local deployement
+    """
+    topologies = [
+      chat: [
+        strategy: Cluster.Strategy.Gossip
+      ]
+    ]
+    """
+    topologies = [
+      k8s_chat: [
+        strategy: Elixir.Cluster.Strategy.Kubernetes.DNS,
+          config: [
+            service: "server-nodes",
+            application_name: "server"
+          ]
+        ]
+      ]
+
     children = [
       ServerWeb.Telemetry,
       Server.Repo,
+      {Cluster.Supervisor, [topologies, [name: Chat.ClusterSupervisor]]},   # connect to other nodes in the cluster
       {DNSCluster, query: Application.get_env(:server, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Server.PubSub},
       # Start the Finch HTTP client for sending emails

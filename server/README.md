@@ -19,6 +19,12 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   
 ## Starting on Kubernetes
 
+See https://www.poeticoding.com/connecting-elixir-nodes-with-libcluster-locally-and-on-kubernetes/ for details about how to create a cluster inside Kubernetes, but in short:
+
+- add [headless service](./k8s/headless-service.yaml)
+- add libcluster to the [dependencies](./mix.exs)
+- start a libcluster application in [./lib/server/application.ex](./lib/server/application.ex) to discover the different replicas and connect automatically to them
+
 ```bash
 kubectl apply -f k8s
 minikube service server # get the ip for the server

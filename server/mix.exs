@@ -52,7 +52,8 @@ defmodule Server.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
-      {:req, "~> 0.4.0"}
+      {:req, "~> 0.4.0"},
+      {:libcluster, "~> 3.0"}   # used to create a kubernetes cluster
     ]
   end
 

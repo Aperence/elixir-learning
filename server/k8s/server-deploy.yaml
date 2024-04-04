@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: server
 spec:
+  replicas: 3
   selector:
     matchLabels:
       app: server
@@ -31,5 +32,20 @@ spec:
             value: "5432"
           - name: PGHOST
             value: postgres
+          - name: ERLANG_COOKIE
+            value: "secret"
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
         ports:
         - containerPort: 4000
+        command: ["elixir"]
+        args: [
+          "--name", 
+          "server@$(MY_POD_IP)", 
+          "--cookie","$(ERLANG_COOKIE)", 
+          "--no-halt", 
+          "-S","mix",
+          "phx.server"
+        ]
