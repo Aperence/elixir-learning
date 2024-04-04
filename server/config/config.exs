@@ -13,7 +13,7 @@ config :server,
 
 # Configures the endpoint
 config :server, ServerWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "0.0.0.0"],
   adapter: Phoenix.Endpoint.Cowboy2Adapter,
   render_errors: [
     formats: [html: ServerWeb.ErrorHTML, json: ServerWeb.ErrorJSON],

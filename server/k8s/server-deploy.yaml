@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+spec:
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+      - name: server
+        image: aperence/phoenix
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+          # Variables to connect to our Postgres server.
+          - name: PGUSER
+            value: postgres
+          - name: PGPASSWORD
+            value: postgres
+          - name: PGDATABASE
+            value: server_dev
+          - name: PGPORT
+            value: "5432"
+          - name: PGHOST
+            value: postgres
+        ports:
+        - containerPort: 4000
